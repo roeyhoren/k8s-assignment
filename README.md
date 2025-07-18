@@ -1,13 +1,14 @@
 # k8s-assignment
 
-DevOps assignment for setting up local kubernetes cluster with terraform and deploying some web apps.
+DevOps assignment for setting up local kubernetes cluster with terraform and deploying multiple web apps.
 
 ## What this does
 
 - Sets up a local k8s cluster using kind
-- Deploys multiple web applications 
-- Each app returns pod name and IP
-- Uses ingress for routing traffic
+- Deploys 3 web applications with minimal code duplication
+- Each app returns pod name and IP address
+- Uses nginx ingress for routing traffic to different apps
+- Includes CI/CD pipeline with GitHub Actions
 
 ## Structure
 
@@ -15,11 +16,11 @@ DevOps assignment for setting up local kubernetes cluster with terraform and dep
 terraform/
   modules/
     cluster/   - kind cluster setup
-    apps/      - web app deployments
-    ingress/   - ingress controller
+    apps/      - reusable web app deployment module
+    ingress/   - ingress controller and routing
 src/
-  webapp/    - simple web app code
-scripts/     - helper scripts
+  webapp/    - simple go web app code
+scripts/     - helper scripts for deploy/test/cleanup
 ```
 
 ## Requirements
@@ -29,28 +30,48 @@ scripts/     - helper scripts
 - Kind 
 - kubectl
 
-## Usage
+## Quick Start
 
 ```bash
-# setup cluster
+# Easy deployment
+./scripts/deploy.sh
+
+# Or manual deployment
 cd terraform
 terraform init
 terraform apply
 
-# check apps
-kubectl get pods
+# Test the apps
+./scripts/test.sh
+
+# Cleanup when done
+./scripts/cleanup.sh
 ```
 
-## Apps
+## Applications
 
-The web apps return:
+The web apps are available at:
+- http://localhost/app1
+- http://localhost/app2  
+- http://localhost/app3
+
+Each endpoint returns JSON with:
 - Pod name
-- Pod IP 
-- Some basic info
+- Pod IP address
+- App name
+- Welcome message
 
-## TODO
+## Features
 
-- [ ] Add more apps
-- [ ] Better ingress config
-- [ ] CI/CD pipeline
-- [ ] Tests
+- ✅ Modular terraform structure
+- ✅ Minimal code duplication (reusable app module)
+- ✅ Health checks and readiness probes
+- ✅ Ingress routing with distinct paths
+- ✅ CI/CD pipeline with GitHub Actions
+- ✅ Helper scripts for easy deployment
+
+## Bonus Features
+
+- Multiple applications using the same reusable module
+- Automated testing in CI/CD pipeline
+- Local development scripts
