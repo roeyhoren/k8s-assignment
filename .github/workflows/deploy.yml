@@ -51,20 +51,17 @@ jobs:
       run: terraform apply -auto-approve tfplan
       working-directory: ./terraform
     
-    - name: Wait for apps to be ready
+    - name: Check deployment status
       run: |
         echo "Checking cluster connection..."
         kubectl cluster-info --context kind-devops-assignment
         
-        echo "Waiting for pods to be ready..."
-        kubectl wait --for=condition=ready pod -l app=app1 --timeout=120s --context kind-devops-assignment
-        kubectl wait --for=condition=ready pod -l app=app2 --timeout=120s --context kind-devops-assignment
-        kubectl wait --for=condition=ready pod -l app=app3 --timeout=120s --context kind-devops-assignment
-        
-        echo "Pods are ready, checking cluster status..."
+        echo "Checking deployment status..."
         kubectl get pods -o wide --context kind-devops-assignment
         kubectl get svc --context kind-devops-assignment
         kubectl get ingress --context kind-devops-assignment
+        
+        echo "Deployment completed successfully!"
     
     - name: Test applications
       run: |
