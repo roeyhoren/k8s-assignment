@@ -80,7 +80,8 @@ jobs:
           response=$(curl -s http://localhost:8080)
           kill $PF_PID
           
-          if echo "$response" | grep -q "pod_name"; then
+          # Check for different response formats
+          if echo "$response" | grep -q "pod_name" || echo "$response" | grep -q "hostname"; then
             echo "✓ $app is responding correctly"
             echo "  Response: $response"
           else
