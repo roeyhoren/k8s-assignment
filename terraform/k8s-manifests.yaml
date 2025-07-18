@@ -126,48 +126,39 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app3
+  name: podinfo
   labels:
-    app: app3
+    app: podinfo
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: app3
+      app: podinfo
   template:
     metadata:
       labels:
-        app: app3
+        app: podinfo
     spec:
       containers:
-      - name: app3
-        image: webapp:latest
-        imagePullPolicy: Never
+      - name: podinfo
+        image: stefanprodan/podinfo:6.4.0
         ports:
-        - containerPort: 8080
+        - containerPort: 9898
         env:
-        - name: APP_NAME
-          value: "app3"
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
+        - name: PODINFO_UI_COLOR
+          value: "#34577c"
         livenessProbe:
           httpGet:
-            path: /health
-            port: 8080
+            path: /healthz
+            port: 9898
           initialDelaySeconds: 15
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /health
-            port: 8080
+            path: /readyz
+            port: 9898
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 5
@@ -176,13 +167,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: app3
+  name: podinfo
 spec:
   selector:
-    app: app3
+    app: podinfo
   ports:
   - port: 80
-    targetPort: 8080
+    targetPort: 9898
   type: ClusterIP
 ---
 apiVersion: v1
@@ -216,10 +207,10 @@ spec:
             name: app2
             port:
               number: 80
-      - path: /app3(/|$)(.*)
+      - path: /podinfo(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: app3
+            name: podinfo
             port:
               number: 80
