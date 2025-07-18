@@ -1,0 +1,72 @@
+name: Deploy K8s Assignment
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Install Kind
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/kind
+    
+    - name: Install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/kubectl
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+    
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./terraform
+    
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: ./terraform
+    
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      working-directory: ./terraform
+    
+    - name: Wait for apps to be ready
+      run: |
+        kubectl wait --for=condition=ready pod -l app=app1 --timeout=120s
+        kubectl wait --for=condition=ready pod -l app=app2 --timeout=120s
+        kubectl wait --for=condition=ready pod -l app=app3 --timeout=120s
+    
+    - name: Test applications
+      run: |
+        # Wait for ingress to be ready
+        sleep 30
+        
+        # Test each app endpoint
+        for app in app1 app2 app3; do
+          echo "Testing $app..."
+          curl -f http://localhost/$app || exit 1
+        done
+        
+        echo "All applications are responding!"
+    
+    - name: Cleanup
+      if: always()
+      run: |
+        terraform destroy -auto-approve
+        kind delete cluster --name devops-assignment
+      working-directory: ./terraform
