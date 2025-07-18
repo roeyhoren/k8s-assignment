@@ -75,10 +75,10 @@ resource "null_resource" "deploy_apps" {
         exit 1
       }
       
-      echo "Waiting for app3 pods..."
-      kubectl wait --for=condition=ready pod -l app=app3 --timeout=180s --context kind-${var.cluster_name} || {
-        echo "App3 pods failed to become ready, checking logs..."
-        kubectl logs -l app=app3 --context kind-${var.cluster_name} --tail=50 || true
+      echo "Waiting for podinfo pods..."
+      kubectl wait --for=condition=ready pod -l app=podinfo --timeout=180s --context kind-${var.cluster_name} || {
+        echo "Podinfo pods failed to become ready, checking logs..."
+        kubectl logs -l app=podinfo --context kind-${var.cluster_name} --tail=50 || true
         exit 1
       }
       
