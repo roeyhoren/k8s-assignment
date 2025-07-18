@@ -44,15 +44,18 @@ jobs:
       working-directory: ./terraform
     
     - name: Terraform Plan
-      run: terraform plan
+      run: terraform plan -out=tfplan
       working-directory: ./terraform
     
     - name: Terraform Apply
-      run: terraform apply -auto-approve
+      run: terraform apply -auto-approve tfplan
       working-directory: ./terraform
     
     - name: Wait for apps to be ready
       run: |
+        echo "Checking cluster connection..."
+        kubectl cluster-info
+        
         echo "Waiting for pods to be ready..."
         kubectl wait --for=condition=ready pod -l app=app1 --timeout=120s
         kubectl wait --for=condition=ready pod -l app=app2 --timeout=120s
@@ -97,6 +100,11 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        terraform destroy -auto-approve
-        kind delete cluster --name devops-assignment
+        # Only try to destroy if terraform state exists
+        if [ -f terraform.tfstate ]; then
+          terraform destroy -auto-approve
+        fi
+        
+        # Always try to delete the kind cluster as backup
+        kind delete cluster --name devops-assignment || true
       working-directory: ./terraform
