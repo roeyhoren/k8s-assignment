@@ -18,6 +18,7 @@ spec:
       containers:
       - name: app1
         image: webapp:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
         env:
@@ -79,6 +80,7 @@ spec:
       containers:
       - name: app2
         image: webapp:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
         env:
@@ -140,6 +142,7 @@ spec:
       containers:
       - name: app3
         image: webapp:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
         env:
