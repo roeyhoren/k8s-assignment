@@ -71,7 +71,7 @@ jobs:
         
         # Test using port-forward as backup
         echo "Testing apps using port-forward..."
-        for app in app1 app2 app3; do
+        for app in app1 app2 podinfo; do
           echo "Testing $app..."
           kubectl port-forward svc/$app 8080:80 --context kind-devops-assignment &
           PF_PID=$!
