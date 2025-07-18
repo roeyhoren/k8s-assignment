@@ -54,29 +54,29 @@ jobs:
     - name: Wait for apps to be ready
       run: |
         echo "Checking cluster connection..."
-        kubectl cluster-info
+        kubectl cluster-info --context kind-devops-assignment
         
         echo "Waiting for pods to be ready..."
-        kubectl wait --for=condition=ready pod -l app=app1 --timeout=120s
-        kubectl wait --for=condition=ready pod -l app=app2 --timeout=120s
-        kubectl wait --for=condition=ready pod -l app=app3 --timeout=120s
+        kubectl wait --for=condition=ready pod -l app=app1 --timeout=120s --context kind-devops-assignment
+        kubectl wait --for=condition=ready pod -l app=app2 --timeout=120s --context kind-devops-assignment
+        kubectl wait --for=condition=ready pod -l app=app3 --timeout=120s --context kind-devops-assignment
         
         echo "Pods are ready, checking cluster status..."
-        kubectl get pods -o wide
-        kubectl get svc
-        kubectl get ingress
+        kubectl get pods -o wide --context kind-devops-assignment
+        kubectl get svc --context kind-devops-assignment
+        kubectl get ingress --context kind-devops-assignment
     
     - name: Test applications
       run: |
         # Wait for ingress to be ready
         echo "Waiting for ingress controller..."
-        kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s
+        kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s --context kind-devops-assignment
         
         # Test using port-forward as backup
         echo "Testing apps using port-forward..."
         for app in app1 app2 app3; do
           echo "Testing $app..."
-          kubectl port-forward svc/$app 8080:80 &
+          kubectl port-forward svc/$app 8080:80 --context kind-devops-assignment &
           PF_PID=$!
           sleep 5
           
@@ -89,8 +89,8 @@ jobs:
           else
             echo "✗ $app is not responding properly"
             echo "  Response: $response"
-            kubectl get pods -l app=$app
-            kubectl describe pod -l app=$app
+            kubectl get pods -l app=$app --context kind-devops-assignment
+            kubectl describe pod -l app=$app --context kind-devops-assignment
             exit 1
           fi
         done
