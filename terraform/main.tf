@@ -10,6 +10,7 @@ module "cluster" {
   cluster_name = var.cluster_name
 }
 
+
 # Build the webapp image
 resource "null_resource" "build_webapp_image" {
   depends_on = [module.cluster]
@@ -28,7 +29,9 @@ resource "null_resource" "wait_for_k8s_api" {
   
   provisioner "local-exec" {
     command = <<-EOF
-      timeout 300 bash -c 'until kubectl get nodes --context kind-${var.cluster_name} > /dev/null 2>&1; do echo "Waiting for k8s API..."; sleep 5; done'
+      # Double-check that the cluster is accessible
+      echo "Verifying Kubernetes API access..."
+      kubectl get nodes --context kind-${var.cluster_name}
       echo "Kubernetes API is ready"
     EOF
   }
