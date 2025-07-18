@@ -180,29 +180,29 @@ kind: Ingress
 metadata:
   name: main-ingress
   annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
+  ingressClassName: nginx
   rules:
   - host: localhost
     http:
       paths:
-      - path: /app1/(.*)
-        pathType: Prefix
+      - path: /app1(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: app1
             port:
               number: 80
-      - path: /app2/(.*)
-        pathType: Prefix
+      - path: /app2(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: app2
             port:
               number: 80
-      - path: /app3/(.*)
-        pathType: Prefix
+      - path: /app3(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: app3
