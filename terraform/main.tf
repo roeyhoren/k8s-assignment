@@ -45,15 +45,44 @@ resource "null_resource" "deploy_apps" {
       kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml --context kind-${var.cluster_name}
       
       # Wait for ingress controller to be ready
-      kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s --context kind-${var.cluster_name}
+      kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s --context kind-${var.cluster_name}
       
       # Deploy applications
       kubectl apply -f k8s-manifests.yaml --context kind-${var.cluster_name}
       
-      # Wait for applications to be ready
-      kubectl wait --for=condition=ready pod -l app=app1 --timeout=120s --context kind-${var.cluster_name}
-      kubectl wait --for=condition=ready pod -l app=app2 --timeout=120s --context kind-${var.cluster_name}
-      kubectl wait --for=condition=ready pod -l app=app3 --timeout=120s --context kind-${var.cluster_name}
+      # Give pods time to start
+      sleep 15
+      
+      # Check pod status
+      echo "Checking pod status..."
+      kubectl get pods --context kind-${var.cluster_name} -o wide
+      
+      # Check if any pods are failing
+      kubectl describe pods --context kind-${var.cluster_name} | grep -A 10 -B 5 "Warning\|Error" || true
+      
+      # Wait for applications to be ready with longer timeout
+      echo "Waiting for app1 pods..."
+      kubectl wait --for=condition=ready pod -l app=app1 --timeout=180s --context kind-${var.cluster_name} || {
+        echo "App1 pods failed to become ready, checking logs..."
+        kubectl logs -l app=app1 --context kind-${var.cluster_name} --tail=50 || true
+        exit 1
+      }
+      
+      echo "Waiting for app2 pods..."
+      kubectl wait --for=condition=ready pod -l app=app2 --timeout=180s --context kind-${var.cluster_name} || {
+        echo "App2 pods failed to become ready, checking logs..."
+        kubectl logs -l app=app2 --context kind-${var.cluster_name} --tail=50 || true
+        exit 1
+      }
+      
+      echo "Waiting for app3 pods..."
+      kubectl wait --for=condition=ready pod -l app=app3 --timeout=180s --context kind-${var.cluster_name} || {
+        echo "App3 pods failed to become ready, checking logs..."
+        kubectl logs -l app=app3 --context kind-${var.cluster_name} --tail=50 || true
+        exit 1
+      }
+      
+      echo "All applications are ready!"
     EOF
   }
 }
